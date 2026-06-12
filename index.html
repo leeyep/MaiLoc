@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaiLoc - Admin Edition</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <button id="locate-me-btn" onclick="autoLocateUser()">📍 Find My Location</button>
+
+    <button id="admin-toggle-btn" onclick="toggleAdminMode()">Switch to Admin View</button>
+
+    <div id="admin-dashboard" class="hidden">
+        <h3>Admin Control Panel</h3>
+        <hr>
+        
+        <div id="auth-section">
+            <h4>Admin Sign In</h4>
+            <input type="email" id="auth-email" placeholder="Admin Email"><br>
+            <input type="password" id="auth-password" placeholder="Password"><br>
+            <button onclick="handleLogin()" style="background: #007bff; margin-bottom: 5px;">Login</button>
+        </div>
+
+        <div id="admin-controls" class="hidden">
+            <p>Logged in as: <span id="admin-email-display" style="font-weight:bold;"></span></p>
+            <button onclick="handleLogout()" style="background: #6c757d; padding: 4px; font-size: 12px; margin-bottom: 15px;">Sign Out</button>
+            
+            <h4>Add New Arcade</h4>
+            <input type="text" id="new-name" placeholder="Arcade Name"><br>
+            <input type="number" id="new-lat" step="any" placeholder="Latitude"><br>
+            <input type="number" id="new-long" step="any" placeholder="Longitude"><br>
+            <input type="text" id="new-version" placeholder="Maimai Version"><br>
+            <input type="number" id="new-cabs" placeholder="Cabinet Count"><br>
+            <button onclick="addNewArcade()" style="background: #28a745;">Add Arcade Pin</button>
+            
+            <hr>
+            <h4>Current Arcades (Remove)</h4>
+            <ul id="arcade-delete-list"></ul>
+        </div>
+    </div>    
+        <hr>
+        <h4>Current Arcades (Remove)</h4>
+        <ul id="arcade-delete-list"></ul>
+    </div>
+</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>
