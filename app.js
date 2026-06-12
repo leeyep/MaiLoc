@@ -5,60 +5,6 @@
 const EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-arcades";
 
 // ==========================================
-// 1.5 AUTHENTICATION MANAGEMENT SYSTEM (REFACTORED)
-// ==========================================
-
-// Check session state immediately on boot
-async function checkUserSession() {
-    // Placeholder placeholder block: Safe from key dependencies
-    console.log("Checking admin credentials footprint...");
-}
-
-// Handle Login Execution
-async function handleLogin() {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
-
-    // 💡 SKEPTIC NOTE: To activate admin later without public keys,
-    // you will route this login request package directly through your Edge Function URL!
-    if (email === "admin@test.com" && password === "password123") {
-        alert("Login successful!");
-        updateUIForAuth({ user: { email: email } });
-    } else {
-        alert("Login failed: Invalid credentials configuration.");
-    }
-}
-
-// Handle Logout Execution
-function handleLogout() {
-    updateUIForAuth(null);
-}
-
-// Dynamically shift interface elements based on authentication token presence
-function updateUIForAuth(session) {
-    const authSection = document.getElementById('auth-section');
-    const adminControls = document.getElementById('admin-controls');
-    const emailDisplay = document.getElementById('admin-email-display');
-
-    if (!authSection || !adminControls || !emailDisplay) return;
-
-    if (session && session.user) {
-        authSection.classList.add('hidden');
-        adminControls.classList.remove('hidden');
-        emailDisplay.innerText = session.user.email;
-    } else {
-        authSection.classList.remove('hidden');
-        adminControls.classList.add('hidden');
-        emailDisplay.innerText = "";
-    }
-}
-
-// ==========================================
 // 2. INITIALIZE THE LEAFLET MAP ENVIRONMENT
 // ==========================================
 const map = L.map('map').setView([3.1390, 101.6869], 11);
@@ -93,78 +39,7 @@ async function fetchArcadesFromCloud() {
     }
 }
 
-// OPERATION B: Add a new arcade pin via the secure serverless edge gateway
-async function addNewArcade() {
-    const name = document.getElementById('new-name').value;
-    const lat = parseFloat(document.getElementById('new-lat').value);
-    const long = parseFloat(document.getElementById('new-long').value);
-    const version = document.getElementById('new-version').value;
-    const cabs = parseInt(document.getElementById('new-cabs').value);
 
-    if (!name || isNaN(lat) || isNaN(long)) {
-        alert("Please enter a valid Name and Latitude/Longitude coordinates.");
-        return;
-    }
-
-    const payloadPackage = {
-        action: 'insert',
-        payload: {
-            name: name,
-            lat: lat,
-            long: long,
-            version: version || "Unknown",
-            cabs: cabs || 1
-        }
-    };
-
-    try {
-        const response = await fetch(EDGE_FUNCTION_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadPackage)
-        });
-
-        if (!response.ok) throw new Error("Insertion transaction rejected by secure cloud middleware.");
-
-        document.getElementById('new-name').value = "";
-        document.getElementById('new-lat').value = "";
-        document.getElementById('new-long').value = "";
-        document.getElementById('new-version').value = "";
-        document.getElementById('new-cabs').value = "";
-
-        fetchArcadesFromCloud();
-    } catch (err) {
-        console.error("Insertion failure:", err);
-        alert("Secure cloud pin insertion process failed!");
-    }
-}
-
-// OPERATION C: Delete an arcade row securely via the cloud edge gateway
-async function deleteArcade(idToDestroy) {
-    console.log(`Requesting secure deletion for arcade record ID: ${idToDestroy}`);
-
-    const payloadPackage = {
-        action: 'delete',
-        payload: {
-            id: idToDestroy
-        }
-    };
-
-    try {
-        const response = await fetch(EDGE_FUNCTION_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadPackage)
-        });
-
-        if (!response.ok) throw new Error("Deletion transaction rejected by cloud security rules.");
-
-        fetchArcadesFromCloud();
-    } catch (err) {
-        console.error("Deletion transaction failed:", err);
-        alert("Secure deletion operation failed!");
-    }
-}
 
 // ==========================================
 // 4. UI INTERFACE RENDERING LOOP CYCLE
@@ -176,7 +51,6 @@ function renderPins() {
     if (deleteListHTML) deleteListHTML.innerHTML = "";
 
     arcades.forEach(arcade => {
-        // ✅ FIXED: Using proper dynamic template literal syntax variables
         const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${arcade.lat},${arcade.long}`;
 
         L.marker([arcade.lat, arcade.long])
@@ -194,16 +68,6 @@ function renderPins() {
                     </a>
                 </div>
             `);
-
-        if (deleteListHTML) {
-            const listItem = document.createElement('li');
-            listItem.style.marginBottom = "8px";
-            listItem.innerHTML = `
-                ${arcade.name} 
-                <button style="background:#dc3545; width:auto; display:inline; padding:2px 6px; margin-left:5px;" onclick="deleteArcade(${arcade.id})">X</button>
-            `;
-            deleteListHTML.appendChild(listItem);
-        }
     });
 }
 
@@ -280,7 +144,6 @@ function toggleAdminMode() {
 // 5. MASTER BOOTSTRAP INITIALIZATION PIPELINE
 // ==========================================
 async function initializeApp() {
-    await checkUserSession();
     await fetchArcadesFromCloud();
 }
 

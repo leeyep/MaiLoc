@@ -17,7 +17,7 @@ body, html {
 /*User locate button */
 #locate-me-btn {
     position: absolute;
-    top: 70px; /* Sits cleanly right below your 'Switch to Admin View' button */
+    top: 10px; /* Sits cleanly right below your 'Switch to Admin View' button */
     right: 10px;
     z-index: 1000; /* Forces the button to float over the map layer canvas */
     padding: 10px 14px;
@@ -37,56 +37,4 @@ body, html {
 
 #locate-me-btn:active {
     transform: scale(0.95); /* Little tactile click feedback bounce */
-}
-
-/*Admin */
-#admin-toggle-btn, #admin-dashboard {
-    position: absolute;
-    z-index: 1000; /* Forces elements to sit ON TOP of the map layer */
-}
-
-#admin-toggle-btn {
-    top: 10px;
-    right: 10px;
-    padding: 10px 15px;
-    background: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    font-weight: bold;
-}
-
-#admin-dashboard {
-    top: 10px;
-    left: 10px;
-    width: 280px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 15px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    border-radius: 8px;
-}
-
-#admin-dashboard input {
-    width: 92%;
-    margin-bottom: 8px;
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-#admin-dashboard button {
-    width: 100%;
-    padding: 8px;
-    background: #28a745;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
-/* Utility class to show/hide the admin panel */
-.hidden {
-    display: none !important;
 }
