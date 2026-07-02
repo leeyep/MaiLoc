@@ -1,7 +1,7 @@
 body, html {
-    margin: 0; 
-    padding: 0; 
-    height: 100%; 
+    margin: 0;
+    padding: 0;
+    height: 100%;
     font-family: Arial, sans-serif;
 }
 
@@ -11,15 +11,54 @@ body, html {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1; /* Sits underneath the panels */
+    z-index: 1; /* sits underneath the floating panels */
 }
 
-/*User locate button */
+/* Loading overlay shown while arcade data first loads.
+   z-index is BELOW the dropdown/button (1000) so it only covers the map,
+   never obscures or blocks clicks on the controls while loading. */
+#loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 500;
+    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #555;
+    transition: opacity 0.2s ease;
+}
+
+#loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #ddd;
+    border-top-color: #28a745;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Locate-me button, top right */
 #locate-me-btn {
     position: absolute;
-    top: 10px; /* Sits cleanly right below your 'Switch to Admin View' button */
+    top: 10px;
     right: 10px;
-    z-index: 1000; /* Forces the button to float over the map layer canvas */
+    z-index: 1000;
     padding: 10px 14px;
     background: #28a745;
     color: white;
@@ -36,5 +75,42 @@ body, html {
 }
 
 #locate-me-btn:active {
-    transform: scale(0.95); /* Little tactile click feedback bounce */
+    transform: scale(0.95);
+}
+
+#locate-me-btn:disabled {
+    background: #6c757d;
+    cursor: default;
+    transform: none;
+}
+
+/* Arcade jump-to dropdown, top left */
+#arcade-select {
+    position: absolute;
+    top: 10px;
+    left: 50px;
+    z-index: 1000;
+    padding: 10px 12px;
+    max-width: 60vw;
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+/* Mobile: give the dropdown and locate button more breathing room, bigger tap targets */
+@media (max-width: 480px) {
+    #arcade-select {
+        max-width: 55vw;
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    #locate-me-btn {
+        padding: 12px 12px;
+        font-size: 13px;
+    }
 }

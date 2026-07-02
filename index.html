@@ -4,17 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MaiLoc - Arcade Map</title>
-    
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="map"></div>
 
+    <div id="loading-overlay">
+        <div id="loading-spinner"></div>
+        <span>Loading arcade locations...</span>
+    </div>
+
+    <select id="arcade-select">
+        <option value="">📍 Jump to a location...</option>
+    </select>
+
     <button id="locate-me-btn" onclick="autoLocateUser()">📍 Find My Location</button>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script src="app.js"></script>
 </body>
 </html>
