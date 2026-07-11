@@ -2,13 +2,24 @@
 const EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-arcades";
 
 // Map setup
-const map = L.map('map').setView([3.1390, 101.6869], 11);
+// preferCanvas + tile-loading tweaks reduce jank on mobile, especially during zoom gestures
+const map = L.map('map', { preferCanvas: true }).setView([3.1390, 101.6869], 11);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+    attribution: '© OpenStreetMap contributors',
+    updateWhenZooming: false, // wait until the zoom gesture finishes before loading new tiles
+    keepBuffer: 2
 }).addTo(map);
 
-const markerGroup = L.layerGroup().addTo(map);
+// Marker clustering: at low zoom (e.g. zoomed out), nearby arcades group into a
+// single cluster bubble instead of rendering 60 individual pins at once — this
+// is what was causing the bad lag when zooming out on mobile.
+const markerGroup = L.markerClusterGroup({
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    maxClusterRadius: 50
+});
+map.addLayer(markerGroup);
 
 // App state
 let arcades = [];
@@ -24,7 +35,6 @@ async function fetchArcadesFromCloud() {
 
         arcades = await response.json();
         renderPins();
-        populateArcadeDropdown();
     } catch (err) {
         console.error("Fetch failure:", err);
         alert("Failed to load map data. Please refresh the page.");
@@ -66,20 +76,43 @@ function renderPins() {
     });
 }
 
-// Fill the "jump to location" dropdown, sorted alphabetically
-function populateArcadeDropdown() {
-    const select = document.getElementById('arcade-select');
-    if (!select) return;
+// Search UI: filters arcades by name as you type, click a result to jump to it
+function renderSearchResults(query) {
+    const resultsEl = document.getElementById('arcade-search-results');
+    if (!resultsEl) return;
 
-    select.innerHTML = '<option value="">📍 Jump to a location...</option>';
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+        resultsEl.classList.add('hidden');
+        resultsEl.innerHTML = "";
+        return;
+    }
 
-    const sorted = [...arcades].sort((a, b) => a.name.localeCompare(b.name));
-    sorted.forEach(arcade => {
-        const option = document.createElement('option');
-        option.value = arcade.name;
-        option.textContent = arcade.name;
-        select.appendChild(option);
+    const matches = arcades
+        .filter(a => a.name.toLowerCase().includes(trimmed))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(0, 20); // cap so a broad query doesn't render a huge list
+
+    resultsEl.innerHTML = "";
+
+    if (matches.length === 0) {
+        resultsEl.innerHTML = `<li class="no-results">No arcades found</li>`;
+        resultsEl.classList.remove('hidden');
+        return;
+    }
+
+    matches.forEach(arcade => {
+        const li = document.createElement('li');
+        li.textContent = arcade.name;
+        li.onclick = () => {
+            jumpToArcade(arcade.name);
+            document.getElementById('arcade-search-input').value = arcade.name;
+            resultsEl.classList.add('hidden');
+        };
+        resultsEl.appendChild(li);
     });
+
+    resultsEl.classList.remove('hidden');
 }
 
 function jumpToArcade(name) {
@@ -88,8 +121,11 @@ function jumpToArcade(name) {
     const marker = markersByName[name];
     if (!arcade || !marker) return;
 
-    map.flyTo([arcade.lat, arcade.long], 15, { animate: true, duration: 1.2 });
-    marker.openPopup();
+    // With clustering, the marker may currently be hidden inside a cluster bubble.
+    // zoomToShowLayer zooms in just enough to reveal it, then runs the callback.
+    markerGroup.zoomToShowLayer(marker, () => {
+        marker.openPopup();
+    });
 }
 
 // ==========================================
@@ -207,10 +243,20 @@ async function initializeApp() {
 
     await fetchArcadesFromCloud();
 
-    const select = document.getElementById('arcade-select');
-    if (select) {
-        select.addEventListener('change', (e) => jumpToArcade(e.target.value));
+    const searchInput = document.getElementById('arcade-search-input');
+    const resultsEl = document.getElementById('arcade-search-results');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => renderSearchResults(e.target.value));
+        searchInput.addEventListener('focus', (e) => renderSearchResults(e.target.value));
     }
+
+    // Click outside the search box closes the results list
+    document.addEventListener('click', (e) => {
+        const container = document.getElementById('arcade-search-container');
+        if (container && !container.contains(e.target)) {
+            resultsEl.classList.add('hidden');
+        }
+    });
 }
 
 initializeApp();

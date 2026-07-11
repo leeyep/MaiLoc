@@ -6,6 +6,8 @@
     <title>MaiLoc - Arcade Map</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,13 +18,15 @@
         <span>Loading arcade locations...</span>
     </div>
 
-    <select id="arcade-select">
-        <option value="">📍 Jump to a location...</option>
-    </select>
+    <div id="arcade-search-container">
+        <input type="text" id="arcade-search-input" placeholder="🔍 Search arcades...">
+        <ul id="arcade-search-results" class="hidden"></ul>
+    </div>
 
     <button id="locate-me-btn" onclick="autoLocateUser()">📍 Find My Location</button>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
