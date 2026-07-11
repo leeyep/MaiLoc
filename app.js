@@ -1,5 +1,6 @@
-// Supabase edge function that serves arcade data (keys stay server-side)
+// Supabase edge functions (keys stay server-side)
 const EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-arcades";
+const REVIEWS_EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-reviews";
 
 // Map setup
 // preferCanvas + tile-loading tweaks reduce jank on mobile, especially during zoom gestures
@@ -59,16 +60,22 @@ function renderPins() {
                 <div style="font-family: Arial, sans-serif; line-height: 1.4;">
                     <strong style="font-size: 14px; color: #333;">${arcade.name}</strong><br>
                     <span style="color: #666;">Version: ${arcade.version}</span><br>
-                    <span style="color: #666;">Cabs: ${arcade.cabs}</span>
+                    <span style="color: #666;">Cabs: ${arcade.cabs}</span><br>
+                    <span style="color: #f5a623; font-size: 13px;">${renderStarsHtml(arcade.avg_rating)}</span>
+                    <span style="color: #888; font-size: 12px;">${arcade.avg_rating ? `${arcade.avg_rating} (${arcade.review_count})` : 'No reviews yet'}</span>
                     <hr style="border: 0; border-top: 1px solid #eee; margin: 8px 0;">
                     <a href="${navUrl}" target="_blank"
                        style="display: block; background: #007bff; color: white; padding: 6px 12px; margin-bottom: 6px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center;">
                        🚗 Navigate on Google Maps
                     </a>
                     <a href="${transitUrl}" target="_blank"
-                       style="display: block; background: #28a745; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center;">
+                       style="display: block; background: #28a745; color: white; padding: 6px 12px; margin-bottom: 6px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center;">
                        🚌 Public Transport Directions
                     </a>
+                    <button onclick="openReviewsModal(${arcade.id})"
+                       style="display: block; width: 100%; background: #6f42c1; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-weight: bold; font-size: 12px; text-align: center; cursor: pointer;">
+                       💬 Reviews
+                    </button>
                 </div>
             `);
 
@@ -121,11 +128,190 @@ function jumpToArcade(name) {
     const marker = markersByName[name];
     if (!arcade || !marker) return;
 
-    // With clustering, the marker may currently be hidden inside a cluster bubble.
-    // zoomToShowLayer zooms in just enough to reveal it, then runs the callback.
+    // zoomToShowLayer only zooms enough to reveal the marker out of its
+    // cluster — if it's already visible at the current zoom, it does nothing
+    // at all, which is why selecting a search result wasn't re-centering the
+    // map. Explicitly fly to the coordinates afterward to guarantee centering.
     markerGroup.zoomToShowLayer(marker, () => {
+        map.flyTo([arcade.lat, arcade.long], Math.max(map.getZoom(), 15), { animate: true, duration: 0.8 });
         marker.openPopup();
     });
+}
+
+function renderStarsHtml(avgRating) {
+    if (!avgRating) return "☆☆☆☆☆";
+    const rounded = Math.round(avgRating); // nearest whole star for the compact popup view
+    return "★".repeat(rounded) + "☆".repeat(5 - rounded);
+}
+
+// ==========================================
+// Reviews modal
+// ==========================================
+let currentReviewArcadeId = null;
+let selectedRating = 0;
+
+async function openReviewsModal(arcadeId) {
+    currentReviewArcadeId = arcadeId;
+    selectedRating = 0;
+
+    const arcade = arcades.find(a => a.id === arcadeId);
+    document.getElementById('reviews-modal-title').innerText = arcade ? arcade.name : "Reviews";
+    document.getElementById('review-comment-input').value = "";
+    document.getElementById('review-name-input').value = "";
+    document.getElementById('review-submit-status').innerText = "";
+    renderStarPicker(0);
+
+    document.getElementById('reviews-modal-backdrop').classList.remove('hidden');
+    document.getElementById('reviews-list').innerHTML = `<li class="reviews-loading">Loading reviews...</li>`;
+
+    try {
+        const response = await fetch(`${REVIEWS_EDGE_FUNCTION_URL}?arcade_id=${arcadeId}`);
+        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+        const reviews = await response.json();
+        renderReviewsList(reviews);
+    } catch (err) {
+        console.error("Failed to load reviews:", err);
+        document.getElementById('reviews-list').innerHTML = `<li class="reviews-loading">Couldn't load reviews. Try again later.</li>`;
+    }
+}
+
+function closeReviewsModal() {
+    document.getElementById('reviews-modal-backdrop').classList.add('hidden');
+    currentReviewArcadeId = null;
+}
+
+function renderReviewsList(reviews) {
+    const listEl = document.getElementById('reviews-list');
+    listEl.innerHTML = "";
+
+    if (!reviews || reviews.length === 0) {
+        listEl.innerHTML = `<li class="reviews-loading">No reviews yet. Be the first!</li>`;
+        return;
+    }
+
+    reviews.forEach(review => {
+        const li = document.createElement('li');
+        li.className = "review-item";
+
+        const date = new Date(review.created_at);
+        const dateStr = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+        li.innerHTML = `
+            <div class="review-header">
+                <span class="review-author">${escapeHtml(review.author_name || 'Anonymous')}</span>
+                <span class="review-date">${dateStr}</span>
+            </div>
+            <div class="review-stars">${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)}</div>
+            ${review.comment ? `<div class="review-comment">${escapeHtml(review.comment)}</div>` : ''}
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+function renderStarPicker(hoverRating) {
+    const pickerEl = document.getElementById('star-picker');
+
+    // Build the 5 star elements once. Rebuilding them on every hover (the old
+    // approach) broke mobile taps: touch fires mouseenter -> click, and
+    // rebuilding mid-gesture destroyed the star being touched before the
+    // click could register, so selectedRating never actually updated.
+    if (pickerEl.children.length !== 5) {
+        pickerEl.innerHTML = "";
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('span');
+            star.className = "star-picker-star";
+            star.dataset.value = i;
+            star.addEventListener('click', () => {
+                selectedRating = i;
+                renderStarPicker(i);
+            });
+            star.addEventListener('mouseenter', () => renderStarPicker(i));
+            star.addEventListener('mouseleave', () => renderStarPicker(selectedRating));
+            pickerEl.appendChild(star);
+        }
+    }
+
+    // Just update each existing star's glyph, no DOM rebuild
+    Array.from(pickerEl.children).forEach((star, idx) => {
+        star.innerText = (idx + 1) <= (hoverRating || selectedRating) ? "★" : "☆";
+    });
+}
+
+async function submitReview() {
+    const statusEl = document.getElementById('review-submit-status');
+    const submitBtn = document.getElementById('review-submit-btn');
+    const authorName = document.getElementById('review-name-input').value.trim();
+    const comment = document.getElementById('review-comment-input').value.trim();
+
+    if (selectedRating < 1) {
+        statusEl.innerText = "Please select a star rating.";
+        statusEl.className = "status-text status-error";
+        return;
+    }
+    if (currentReviewArcadeId === null) return;
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Submitting...";
+
+    try {
+        const response = await fetch(REVIEWS_EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'insert',
+                payload: {
+                    arcade_id: currentReviewArcadeId,
+                    author_name: authorName || 'Anonymous',
+                    rating: selectedRating,
+                    comment: comment
+                }
+            })
+        });
+
+        if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+        const result = await response.json();
+
+        statusEl.innerText = "Review posted, thanks!";
+        statusEl.className = "status-text status-success";
+
+        document.getElementById('review-comment-input').value = "";
+        document.getElementById('review-name-input').value = "";
+        selectedRating = 0;
+        renderStarPicker(0);
+
+        // Prepend the new review locally instead of re-fetching the whole list
+        const listEl = document.getElementById('reviews-list');
+        const loadingPlaceholder = listEl.querySelector('.reviews-loading');
+        if (loadingPlaceholder) loadingPlaceholder.remove();
+        const li = document.createElement('li');
+        li.className = "review-item";
+        const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        li.innerHTML = `
+            <div class="review-header">
+                <span class="review-author">${escapeHtml(result.data.author_name)}</span>
+                <span class="review-date">${dateStr}</span>
+            </div>
+            <div class="review-stars">${"★".repeat(result.data.rating)}${"☆".repeat(5 - result.data.rating)}</div>
+            ${result.data.comment ? `<div class="review-comment">${escapeHtml(result.data.comment)}</div>` : ''}
+        `;
+        listEl.prepend(li);
+
+        // Refresh arcade data in the background so the popup's star average updates too
+        fetchArcadesFromCloud();
+    } catch (err) {
+        console.error("Failed to submit review:", err);
+        statusEl.innerText = "Failed to submit review: " + err.message;
+        statusEl.className = "status-text status-error";
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Review";
+    }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.innerText = str;
+    return div.innerHTML;
 }
 
 // ==========================================
@@ -157,7 +343,7 @@ function autoLocateUser() {
 
     if (btn) {
         btn.disabled = true;
-        btn.innerText = "📍 Locating...";
+        btn.querySelector('.btn-label').innerText = "Locating...";
     }
 
     let bestPosition = null;
@@ -171,7 +357,7 @@ function autoLocateUser() {
         }
         if (btn) {
             btn.disabled = false;
-            btn.innerText = "📍 Find My Location";
+            btn.querySelector('.btn-label').innerText = "Find My Location";
         }
 
         if (!bestPosition) {

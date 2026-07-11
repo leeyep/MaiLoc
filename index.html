@@ -23,7 +23,26 @@
         <ul id="arcade-search-results" class="hidden"></ul>
     </div>
 
-    <button id="locate-me-btn" onclick="autoLocateUser()">📍 Find My Location</button>
+    <button id="locate-me-btn" onclick="autoLocateUser()"><span class="btn-icon">📍</span><span class="btn-label">Find My Location</span></button>
+
+    <div id="reviews-modal-backdrop" class="hidden">
+        <div id="reviews-modal">
+            <div id="reviews-modal-header">
+                <h3 id="reviews-modal-title">Reviews</h3>
+                <button id="reviews-modal-close" onclick="closeReviewsModal()">✕</button>
+            </div>
+
+            <ul id="reviews-list"></ul>
+
+            <hr>
+            <h4>Leave a Review</h4>
+            <div id="star-picker"></div>
+            <input type="text" id="review-name-input" placeholder="Your name (optional)">
+            <textarea id="review-comment-input" placeholder="Share your experience..." rows="3" maxlength="500"></textarea>
+            <button id="review-submit-btn" onclick="submitReview()">Submit Review</button>
+            <div id="review-submit-status" class="status-text"></div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
