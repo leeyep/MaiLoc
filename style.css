@@ -5,6 +5,22 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
+/* Standard "visually hidden" pattern: keeps content accessible to screen
+   readers and search engine crawlers without showing it on screen or
+   affecting layout. Not display:none — that would hide it from crawlers
+   and assistive tech too. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 #map {
     width: 100%;
     height: 100%;

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mailocv2.leeyep.workers.dev/sitemap.xml

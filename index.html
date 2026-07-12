@@ -1,9 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="google-site-verification" content="lkLDJNHZ38DtCYG304ITI4KIWwC34dDWxLv31C8_O6s" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaiLoc - Arcade Map</title>
+
+    <title>MaiLoc – Maimai Arcade Locations in Malaysia | Find Nearby Cabinets</title>
+    <meta name="description" content="Find every Maimai DX arcade cabinet in Malaysia on one interactive map. Check machine versions, cabinet counts, player reviews, and get directions or public transport routes to the nearest location.">
+    <meta name="keywords" content="maimai malaysia, maimai arcade locations, maimai dx cabinets, maimai near me, arcade map malaysia, rhythm game arcade malaysia">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="MaiLoc">
+    <link rel="canonical" href="https://mailocv2.leeyep.workers.dev/">
+
+    <!-- Open Graph / Facebook, WhatsApp, Discord link previews -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mailocv2.leeyep.workers.dev/">
+    <meta property="og:title" content="MaiLoc – Maimai Arcade Locations in Malaysia">
+    <meta property="og:description" content="Find every Maimai DX arcade cabinet in Malaysia on one interactive map. Check machine versions, cabinet counts, player reviews, and get directions.">
+    <meta property="og:image" content="https://mailocv2.leeyep.workers.dev/og-image.png">
+    <meta property="og:locale" content="en_MY">
+    <meta property="og:site_name" content="MaiLoc">
+
+    <!-- Twitter/X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MaiLoc – Maimai Arcade Locations in Malaysia">
+    <meta name="twitter:description" content="Find every Maimai DX arcade cabinet in Malaysia on one interactive map, with reviews and directions.">
+    <meta name="twitter:image" content="https://mailocv2.leeyep.workers.dev/og-image.png">
+
+    <!-- Structured data: helps Google understand what this site is and who it's for -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "MaiLoc",
+        "url": "https://mailocv2.leeyep.workers.dev/",
+        "description": "Interactive map of Maimai DX arcade cabinet locations across Malaysia, with machine versions, cabinet counts, and player reviews.",
+        "inLanguage": "en-MY",
+        "about": {
+            "@type": "Thing",
+            "name": "Maimai DX arcade locations in Malaysia"
+        }
+    }
+    </script>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
@@ -11,6 +49,16 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Visually hidden but crawlable/screen-reader-accessible intro text.
+         The map itself has no text content Google can read, so this gives
+         crawlers real, honest context about what the page is for. -->
+    <h1 class="visually-hidden">MaiLoc – Maimai Arcade Locations in Malaysia</h1>
+    <p class="visually-hidden">
+        Browse an interactive map of Maimai DX arcade cabinets across Malaysia.
+        See each location's machine version, cabinet count, and player reviews,
+        then get driving or public transport directions.
+    </p>
+
     <div id="map"></div>
 
     <div id="loading-overlay">
