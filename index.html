@@ -25,6 +25,8 @@
 
     <button id="locate-me-btn" onclick="autoLocateUser()"><span class="btn-icon">📍</span><span class="btn-label">Find My Location</span></button>
 
+    <button id="feedback-btn" onclick="openFeedbackModal()"><span class="btn-icon">💬</span><span class="btn-label">Feedback</span></button>
+
     <div id="reviews-modal-backdrop" class="hidden">
         <div id="reviews-modal">
             <div id="reviews-modal-header">
@@ -41,6 +43,30 @@
             <textarea id="review-comment-input" placeholder="Share your experience..." rows="3" maxlength="500"></textarea>
             <button id="review-submit-btn" onclick="submitReview()">Submit Review</button>
             <div id="review-submit-status" class="status-text"></div>
+        </div>
+    </div>
+
+    <div id="feedback-modal-backdrop" class="hidden">
+        <div id="feedback-modal">
+            <div id="feedback-modal-header">
+                <h3>Send Feedback</h3>
+                <button id="feedback-modal-close" onclick="closeFeedbackModal()">✕</button>
+            </div>
+
+            <input type="text" id="feedback-name-input" placeholder="Your name (optional)">
+            <input type="email" id="feedback-email-input" placeholder="Your email (optional, so we can reply to you)">
+
+            <label class="field-label" for="feedback-topic-select">What is this feedback about?</label>
+            <select id="feedback-topic-select">
+                <option value="Website">Website</option>
+                <option value="Arcade Info">Arcade Info</option>
+                <option value="Suggestion">Suggestion</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <textarea id="feedback-message-input" placeholder="Tell us what's on your mind..." rows="4" maxlength="1000"></textarea>
+            <button id="feedback-submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+            <div id="feedback-submit-status" class="status-text"></div>
         </div>
     </div>
 

@@ -1,6 +1,7 @@
 // Supabase edge functions (keys stay server-side)
 const EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-arcades";
 const REVIEWS_EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/manage-reviews";
+const FEEDBACK_EDGE_FUNCTION_URL = "https://ufcwkasuazmgqvneuwhy.supabase.co/functions/v1/send-feedback";
 
 // Map setup
 // preferCanvas + tile-loading tweaks reduce jank on mobile, especially during zoom gestures
@@ -312,6 +313,64 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.innerText = str;
     return div.innerHTML;
+}
+
+// ==========================================
+// Feedback modal
+// ==========================================
+function openFeedbackModal() {
+    document.getElementById('feedback-name-input').value = "";
+    document.getElementById('feedback-email-input').value = "";
+    document.getElementById('feedback-topic-select').value = "Website";
+    document.getElementById('feedback-message-input').value = "";
+    document.getElementById('feedback-submit-status').innerText = "";
+    document.getElementById('feedback-modal-backdrop').classList.remove('hidden');
+}
+
+function closeFeedbackModal() {
+    document.getElementById('feedback-modal-backdrop').classList.add('hidden');
+}
+
+async function submitFeedback() {
+    const statusEl = document.getElementById('feedback-submit-status');
+    const submitBtn = document.getElementById('feedback-submit-btn');
+    const name = document.getElementById('feedback-name-input').value.trim();
+    const email = document.getElementById('feedback-email-input').value.trim();
+    const topic = document.getElementById('feedback-topic-select').value;
+    const message = document.getElementById('feedback-message-input').value.trim();
+
+    if (!message) {
+        statusEl.innerText = "Please enter a message before submitting.";
+        statusEl.className = "status-text status-error";
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Sending...";
+    statusEl.innerText = "";
+
+    try {
+        const response = await fetch(FEEDBACK_EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, topic, message })
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || `Server responded with ${response.status}`);
+
+        statusEl.innerText = "Thanks! Your feedback has been sent.";
+        statusEl.className = "status-text status-success";
+
+        setTimeout(closeFeedbackModal, 1500);
+    } catch (err) {
+        console.error("Failed to submit feedback:", err);
+        statusEl.innerText = "Failed to send feedback: " + err.message;
+        statusEl.className = "status-text status-error";
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Feedback";
+    }
 }
 
 // ==========================================
